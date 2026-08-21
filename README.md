@@ -47,7 +47,7 @@ EquipChain is a blockchain-powered platform for monitoring, managing, and analyz
 
 ### Project Status
 
-**Current Phase:** MVP — Core meter monitoring endpoints are operational. The API serves project metadata and on-chain contract data, and provides dashboard analytics aggregation. Future releases will add full CRUD for meters, WebSocket event streaming, and admin management.
+**Current Phase:** MVP — Core meter monitoring endpoints are operational. The API serves project metadata and on-chain contract data, and provides dashboard analytics aggregation. WebSocket event streaming for live meter readings is implemented. Future releases will add full CRUD for meters and admin management.
 
 ---
 
@@ -292,17 +292,23 @@ All export endpoints use streaming to handle large datasets efficiently:
 | `GET` | `/webhooks` | List registered webhooks | Yes |
 | `DELETE` | `/webhooks/:id` | Remove a webhook | Admin |
 
-### WebSocket (Planned)
+### WebSocket (Implemented)
+
+The server exposes a Socket.IO endpoint on the same port as the HTTP API. Clients connect with the Socket.IO client and receive real-time meter reading updates as readings are ingested.
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| `meter:reading` | Server → Client | Real-time meter reading update |
-| `meter:alert` | Server → Client | Meter anomaly or alert notification |
-| `meter:status` | Server → Client | Meter online/offline status change |
-| `subscribe:meters` | Client → Server | Subscribe to specific meter IDs |
-| `unsubscribe:meters` | Client → Server | Unsubscribe from specific meter IDs |
+| `meter:reading` | Server → Client | Real-time meter reading update (broadcast on ingest) |
+| `subscribe:meter` | Client → Server | Subscribe to a single `meterId` (joins room `meter:<meterId>`) |
 
-Connect to `ws://localhost:3000/ws`.
+```js
+import { io } from "socket.io-client";
+const socket = io("http://localhost:3000");
+socket.on("meter:reading", (reading) => console.log(reading));
+socket.emit("subscribe:meter", "meter-42"); // optional per-meter room
+```
+
+Connect with the Socket.IO client to `http://localhost:3000`.
 
 ### Example Responses
 
