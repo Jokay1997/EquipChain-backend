@@ -1,7 +1,7 @@
 const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 
-const app = require('../src/app');
+const app = require('../index.js');
 const server = app.listen(0);
 
 after(() => server.close());
