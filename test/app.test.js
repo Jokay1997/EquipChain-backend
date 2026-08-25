@@ -1,7 +1,7 @@
 const { describe, it, after } = require('node:test');
 const assert = require('node:assert');
 
-const app = require('../index.js');
+const app = require('../src/app');
 const server = app.listen(0);
 
 after(() => server.close());
@@ -22,17 +22,20 @@ describe('app', () => {
   });
 
   it('responds to health check route', async () => {
-    const res = await fetch(`http://localhost:${server.address().port}/api/health`);
+    const res = await fetch(`http://localhost:${server.address().port}/health`);
     assert.strictEqual(res.status, 200);
 
     const data = await res.json();
-    assert.strictEqual(data.status, 'healthy');
+    assert.strictEqual(data.status, 'ok');
     assert.ok(data.timestamp);
   });
 
   it('returns 404 for non-existent routes', async () => {
     const res = await fetch(`http://localhost:${server.address().port}/non-existent-route`);
     assert.strictEqual(res.status, 404);
+
+    const data = await res.json();
+    assert.strictEqual(data.error, 'Not Found');
   });
 
   it('includes correlation ID header in response', async () => {
