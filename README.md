@@ -292,23 +292,18 @@ All export endpoints use streaming to handle large datasets efficiently:
 | `GET` | `/webhooks` | List registered webhooks | Yes |
 | `DELETE` | `/webhooks/:id` | Remove a webhook | Admin |
 
-### WebSocket (Implemented)
+### API Documentation (Implemented)
 
-The server exposes a Socket.IO endpoint on the same port as the HTTP API. Clients connect with the Socket.IO client and receive real-time meter reading updates as readings are ingested.
+The API is documented with OpenAPI 3 and served interactively via Swagger UI.
 
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `meter:reading` | Server → Client | Real-time meter reading update (broadcast on ingest) |
-| `subscribe:meter` | Client → Server | Subscribe to a single `meterId` (joins room `meter:<meterId>`) |
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/openapi.json` | Raw OpenAPI 3 specification (generated from `@openapi` JSDoc annotations) |
+| `GET /api/docs` | Interactive Swagger UI for browsing and testing the API |
 
-```js
-import { io } from "socket.io-client";
-const socket = io("http://localhost:3000");
-socket.on("meter:reading", (reading) => console.log(reading));
-socket.emit("subscribe:meter", "meter-42"); // optional per-meter room
-```
-
-Connect with the Socket.IO client to `http://localhost:3000`.
+The specification covers all API endpoints (system, admin, analytics, exports) and the
+security scheme (`bearerAuth`). Annotations live alongside the route handlers in `src/`,
+so the docs stay in sync with the code.
 
 ### Example Responses
 

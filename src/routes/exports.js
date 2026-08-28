@@ -170,8 +170,32 @@ function requireAdmin(req, res, next) {
 }
 
 /**
- * GET /api/exports/readings
- * Export meter readings with filtering options
+ * @openapi
+ * /api/exports/readings:
+ *   get:
+ *     summary: Export meter readings
+ *     description: Export meter readings with filtering options in CSV/JSON/NDJSON.
+ *     tags: [Exports]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: format
+ *         schema: { type: string, enum: [csv, json, ndjson] }
+ *       - in: query
+ *         name: meterIds
+ *         schema: { type: string }
+ *       - in: query
+ *         name: startDate
+ *         schema: { type: string, format: date-time }
+ *       - in: query
+ *         name: endDate
+ *         schema: { type: string, format: date-time }
+ *       - in: query
+ *         name: fields
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Exported readings }
+ *       401: { description: Unauthorized }
  */
 router.get('/readings', authenticate, async (req, res) => {
   try {
@@ -214,8 +238,25 @@ router.get('/readings', authenticate, async (req, res) => {
 });
 
 /**
- * GET /api/exports/analytics/:summaryType
- * Export analytics summaries by type (daily, weekly, monthly)
+ * @openapi
+ * /api/exports/analytics/{summaryType}:
+ *   get:
+ *     summary: Export analytics summary
+ *     description: Export analytics summaries by type (daily, weekly, monthly).
+ *     tags: [Exports]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: summaryType
+ *         required: true
+ *         schema: { type: string, enum: [daily, weekly, monthly] }
+ *       - in: query
+ *         name: format
+ *         schema: { type: string, enum: [csv, json, ndjson] }
+ *     responses:
+ *       200: { description: Exported analytics summary }
+ *       400: { description: Invalid summary type }
+ *       401: { description: Unauthorized }
  */
 router.get('/analytics/:summaryType', authenticate, async (req, res) => {
   try {
@@ -257,8 +298,24 @@ router.get('/analytics/:summaryType', authenticate, async (req, res) => {
 });
 
 /**
- * GET /api/exports/system-report
- * Export system-wide report combining meters, readings, and alerts
+ * @openapi
+ * /api/exports/system-report:
+ *   get:
+ *     summary: Export system-wide report
+ *     description: Export a system-wide report combining meters, readings, and alerts. Requires admin role.
+ *     tags: [Exports]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: format
+ *         schema: { type: string, enum: [csv, json, ndjson] }
+ *       - in: query
+ *         name: sections
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Exported system report }
+ *       401: { description: Unauthorized }
+ *       403: { description: Admin role required }
  */
 router.get('/system-report', authenticate, requireAdmin, async (req, res) => {
   try {
@@ -333,7 +390,14 @@ router.get('/system-report', authenticate, requireAdmin, async (req, res) => {
 
     log.info({ sections, recordCount: Array.isArray(exportData) ? exportData.length : 1 }, 'Exporting system report');
 
-    await handleExport(req, res, exportData, allFields, 'system-report');
+    if (req.query.format === 'csv') {
+      await handleExport(req, res, exportData, allFields, 'system-report');
+    } else {
+      // For JSON, send the nested structure directly
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="system-report.json"`);
+      res.json(exportData);
+    }
   } catch (error) {
     log.error({ error }, 'Export system report error');
     if (!res.headersSent) {
@@ -343,8 +407,26 @@ router.get('/system-report', authenticate, requireAdmin, async (req, res) => {
 });
 
 /**
- * GET /api/exports/meters
- * Export meter registry
+ * @openapi
+ * /api/exports/meters:
+ *   get:
+ *     summary: Export meter registry
+ *     description: Export the meter registry with optional status and location filters.
+ *     tags: [Exports]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: format
+ *         schema: { type: string, enum: [csv, json, ndjson] }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string }
+ *       - in: query
+ *         name: location
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Exported meters }
+ *       401: { description: Unauthorized }
  */
 router.get('/meters', authenticate, async (req, res) => {
   try {
