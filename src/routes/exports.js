@@ -390,7 +390,14 @@ router.get('/system-report', authenticate, requireAdmin, async (req, res) => {
 
     log.info({ sections, recordCount: Array.isArray(exportData) ? exportData.length : 1 }, 'Exporting system report');
 
-    await handleExport(req, res, exportData, allFields, 'system-report');
+    if (req.query.format === 'csv') {
+      await handleExport(req, res, exportData, allFields, 'system-report');
+    } else {
+      // For JSON, send the nested structure directly
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="system-report.json"`);
+      res.json(exportData);
+    }
   } catch (error) {
     log.error({ error }, 'Export system report error');
     if (!res.headersSent) {
