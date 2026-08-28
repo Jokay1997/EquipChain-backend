@@ -11,7 +11,7 @@ describe('Export Endpoints Integration Tests', () => {
     process.env.PORT = PORT;
     process.env.NODE_ENV = 'test';
     
-    const app = require('../index.js');
+    const app = require('../src/app');
     server = app.listen(PORT);
     
     // Wait for server to be ready

@@ -7,6 +7,7 @@ const reportsHandler = require('../jobs/reports.job');
 const syncHandler = require('../jobs/sync.job');
 const webhookRetryHandler = require('../jobs/webhookRetry.job');
 const cacheWarmHandler = require('../jobs/cacheWarm.job');
+const websocketHandler = require('./websocket');
 
 const log = childLogger('services');
 
@@ -45,8 +46,9 @@ async function initServices(app) {
     // log.info('Event listener initialized');
 
     // Initialize WebSocket (if implemented)
-    // services.websocket = await initWebSocket(app);
-    // log.info('WebSocket initialized');
+    const io = app.get('io');
+    services.websocket = io ? websocketHandler.initWebSocket(io) : null;
+    log.info('WebSocket initialized');
 
     log.info('All services initialized successfully');
   } catch (error) {
